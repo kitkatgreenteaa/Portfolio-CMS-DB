@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        /* Sidebar and layout styles */
+        .admin-panel {
+            display: flex;
+            height: 100vh;
+        }
+        aside {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        aside h2 {
+            margin-top: 0;
+            font-size: 24px;
+            text-align: center;
+        }
+        aside ul {
+            list-style: none;
+            padding: 0;
+        }
+        aside ul li {
+            margin: 20px 0;
+        }
+        aside ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            display: block;
+            cursor: pointer;
+        }
+        aside ul li a:hover {
+            text-decoration: underline;
+        }
+        main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        /* Form styles */
+        form {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        form label {
+            font-weight: bold;
+        }
+        form input, form textarea, form button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        form button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
+        /* Skills section */
+        #skills-list .skill-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        #skills-list img {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+        #skills-list button {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #skills-list button:hover {
+            background-color: #c9302c;
+        }
+        /* Status message */
+        #current-cv {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-panel">
+        <aside>
+            <h2>Admin Panel</h2>
+            <nav>
+                <ul>
+                    <li><a onclick="showSection('about-section')">About</a></li>
+                    <li><a onclick="showSection('skills-section')">Skills</a></li>
+                    <li><a onclick="showSection('contact-section')">Contact</a></li>
+                    <li><a onclick="showSection('upload-cv-section')">Upload CV</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main>
+            <!-- About Section -->
+            <section id="about-section" class="cms-section">
+                <h2>About Section</h2>
+                <form id="about-form">
+                    <label for="about-title">Title:</label>
+                    <input type="text" id="about-title" required>
+                    <label for="about-description">Description:</label>
+                    <textarea id="about-description" rows="4" required></textarea>
+                    <button type="submit">Update About Section</button>
+                </form>
+            </section>
+
+            <!-- Skills Section -->
+            <section id="skills-section" class="cms-section" style="display: none;">
+                <h2>Skills Section</h2>
+                <div id="skills-list">
+                    <!-- Existing skills will be dynamically loaded here -->
+                    <p>Loading skills...</p>
+                </div>
+                
+                <!-- Add New Skill Form -->
+                <h3>Add New Skill</h3>
+                <form id="add-skill-form">
+                    <label for="skill-name">Skill Name:</label>
+                    <input type="text" id="skill-name" required>
+                    <label for="skill-level">Skill Level (%):</label>
+                    <input type="number" id="skill-level" required min="0" max="100">
+                    <label for="skill-icon">Icon (PNG, JPG):</label>
+                    <input type="file" id="skill-icon" accept="image/png, image/jpeg" required>
+                    <button type="submit">Add Skill</button>
+                </form>
+            </section>
+
+            <!-- Social Media Links Section -->
+            <section id="contact-section" class="cms-section" style="display: none;">
+                <h2>Social Media Links</h2>
+                <form id="social-media-form">
+                    <label for="linkedin-link">LinkedIn:</label>
+                    <input type="url" id="linkedin-link" required>
+                    <label for="github-link">GitHub:</label>
+                    <input type="url" id="github-link" required>
+                    <button type="submit">Update Social Media</button>
+                </form>
+            </section>
+
+            <!-- Upload CV Section -->
+            <section id="upload-cv-section" class="cms-section" style="display: none;">
+                <h2>Upload CV</h2>
+                <div id="current-cv">Checking CV status...</div> <!-- Updated placeholder for CV status -->
+                <form id="upload-cv-form">
+                    <input type="file" id="cv-file" accept=".pdf" required>
+                    <button type="submit">Upload New CV</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Show and hide sections
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.cms-section').forEach(section => section.style.display = 'none');
+            // Show the selected section
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        // Initial page load actions
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAboutSection();
+            loadSkills();
+            loadSocialLinks();
+            fetchCV();
+        });
+
+        // Load About Section Data
+        function loadAboutSection() {
+            fetch('http://127.0.0.1:5000/api/about')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('about-title').value = data.title;
+                    document.getElementById('about-description').value = data.description;
+                })
+                .catch(error => console.error('Error fetching About section:', error));
+        }
+
+        // Update About Section
+        document.getElementById('about-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const aboutData = {
+                title: document.getElementById('about-title').value,
+                description: document.getElementById('about-description').value
+            };
+            fetch('http://127.0.0.1:5000/api/about', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(aboutData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.status === 'success' ? 'About section updated.' : 'Failed to update About section.');
+            })
+            .catch(error => console.error('Error updating About section:', error));
+        });
+
+        // Load Skills
+        function loadSkills() {
+            fetch('http://127.0.0.1:5000/api/skills')
+                .then(response => response.json())
+                .then(data => {
+                    const skillsList = document.getElementById('skills-list');
+                    skillsList.innerHTML = ''; // Clear existing skills
+                    data.forEach(skill => {
+                        const skillItem = document.createElement('div');
+                        skillItem.classList.add('skill-item');
+                        skillItem.innerHTML = `
+                            <div>
+                                <img src="${skill.icon_url}" alt="${skill.name}">
+                                ${skill.name} - ${skill.level}%
+                            </div>
+                            <button onclick="removeSkill('${skill.id}')">Remove</button>
+                        `;
+                        skillsList.appendChild(skillItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching skills:', error);
+                    document.getElementById('skills-list').textContent = 'Failed to load skills.';
+                });
+        }
+
+        // Add New Skill
+        document.getElementById('add-skill-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append('name', document.getElementById('skill-name').value);
+            formData.append('level', document.getElementById('skill-level').value);
+            formData.append('icon', document.getElementById('skill-icon').files[0]);
+
+            fetch('http://127.0.0.1:5000/api/skills', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.status === 'success') loadSkills();
+            })
+            .catch(error => console.error('Error adding skill:', error));
+        });
+
+        // Remove Skill
+        function removeSkill(skillId) {
+            fetch(`http://127.0.0.1:5000/api/skills/${skillId}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.status === 'success' ? 'Skill removed successfully.' : 'Failed to remove skill.');
+                    loadSkills();
+                })
+                .catch(error => console.error('Error removing skill:', error));
+        }
+
+        // Load Social Links
+        function loadSocialLinks() {
+            fetch('http://127.0.0.1:5000/api/social_links')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('linkedin-link').value = data.linkedin;
+                    document.getElementById('github-link').value = data.github;
+                })
+                .catch(error => console.error('Error fetching social links:', error));
+        }
+
+        // Update Social Links
+        document.getElementById('social-media-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const socialData = {
+                linkedin: document.getElementById('linkedin-link').value,
+                github: document.getElementById('github-link').value
+            };
+            fetch('http://127.0.0.1:5000/api/social_links', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(socialData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => console.error('Error updating social links:', error));
+        });
+
+        // Load CV status
+        function loadCVStatus() {
+            fetch('http://127.0.0.1:5000/api/cv_status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'exists') {
+                        document.getElementById('current-cv').innerHTML = `
+                            Current CV: <a href="${data.download_url}" target="_blank">${data.name}</a> 
+                            (Uploaded on: ${data.upload_date !== 'Date not tracked' ? data.upload_date : 'Unknown'})
+                        `;
+                    } else {
+                        document.getElementById('current-cv').innerHTML = 'No CV uploaded';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching CV status:', error);
+                    document.getElementById('current-cv').innerText = 'Error fetching CV status';
+                });
+        }
+
+        // Upload New CV
+        document.getElementById('upload-cv-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append('cv', document.getElementById('cv-file').files[0]);
+
+            fetch('http://127.0.0.1:5000/api/upload_cv', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                loadCVStatus(); // Refresh CV status
+            })
+            .catch(error => console.error('Error uploading CV:', error));
+        });
+
+       // Load About Section Data
+       function loadAboutSection() {
+        fetch('http://127.0.0.1:5000/api/about')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('about-title').value = data.title;
+                document.getElementById('about-description').value = data.description;
+            })
+            .catch(error => console.error('Error fetching About section:', error));
+    }
+
+        // Update About Section
+        document.getElementById('about-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const aboutData = {
+                title: document.getElementById('about-title').value,
+                description: document.getElementById('about-description').value
+            };
+            fetch('http://127.0.0.1:5000/api/about', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(aboutData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.status === 'success' ? 'About section updated.' : 'Failed to update About section.');
+            })
+            .catch(error => console.error('Error updating About section:', error));
+        });
+
+        // Initial page load actions
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAboutSection();
+            loadSkills();
+            fetchCV();
+        });    
+    </script>
+</body>
+</html>
